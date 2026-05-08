@@ -6,6 +6,8 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 from apis import apis
 from context import AppContext
 from datetime import datetime, timezone
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.docs import get_swagger_ui_html
 
 load_dotenv()
 
@@ -20,6 +22,15 @@ Base = declarative_base()
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
 context = AppContext(
     app=app,
     engine=engine,
@@ -31,6 +42,10 @@ apis.register_all(context)
 
 Base.metadata.create_all(bind=engine)
 
+
+@app.get("/", include_in_schema=False)
+async def custom_swagger_ui():
+    return get_swagger_ui_html(openapi_url="/openapi.json", title="OCR API Docs")
 
 
 @app.get("/health")
