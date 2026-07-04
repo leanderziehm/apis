@@ -331,4 +331,3 @@ def list_habbits(
     return q.order_by(Habit.created_at.desc()).limit(limit).all()
 
 
-HabitRead
