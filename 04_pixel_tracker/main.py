@@ -12,7 +12,7 @@ import uvicorn
 # Build the SQLAlchemy database URL
 from sqlalchemy.engine import URL
 
-
+Base = declarative_base()
 # ============================================================
 # Configuration
 # ============================================================
