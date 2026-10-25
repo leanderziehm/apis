@@ -9,28 +9,52 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 from PIL import Image
 import uvicorn
 
+# Build the SQLAlchemy database URL
+from sqlalchemy.engine import URL
+
+
 # ============================================================
 # Configuration
 # ============================================================
-DATABASE_URL = os.getenv("DATABASE_URL", "")
-if not DATABASE_URL:
-    print("DATABASE_URL not defined, please create/set your environment variable.")
-    raise SystemExit(1)
-# ============================================================
-# Database Setup
-# ============================================================
-Base = declarative_base()
-engine = create_engine(
-    DATABASE_URL,
-    pool_pre_ping=True,
+POSTGRES_USER = os.getenv("POSTGRES_USER")
+POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
+POSTGRES_DB = os.getenv("POSTGRES_DB")
+POSTGRES_HOST = os.getenv("POSTGRES_HOST")
+POSTGRES_PORT = os.getenv("POSTGRES_PORT", "5432")
+
+# Validate required environment variables
+required_vars = {
+    "POSTGRES_USER": POSTGRES_USER,
+    "POSTGRES_PASSWORD": POSTGRES_PASSWORD,
+    "POSTGRES_DB": POSTGRES_DB,
+    "POSTGRES_HOST": POSTGRES_HOST,
+}
+
+missing_vars = [name for name, value in required_vars.items() if not value]
+
+if missing_vars:
+    raise RuntimeError(
+        f"Missing required environment variables: {', '.join(missing_vars)}"
+    )
+
+
+DATABASE_URL = URL.create(
+    drivername="postgresql+psycopg2",
+    username=POSTGRES_USER,
+    password=POSTGRES_PASSWORD,
+    host=POSTGRES_HOST,
+    port=int(POSTGRES_PORT),
+    database=POSTGRES_DB,
 )
+
+# Create the SQLAlchemy engine
+engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+
 SessionLocal = sessionmaker(
-    bind=engine,
-    autoflush=False,
     autocommit=False,
+    autoflush=False,
+    bind=engine,
 )
-
-
 class PixelEvent(Base):
     __tablename__ = "pixel_tracker_events_v2"
     id = Column(Integer, primary_key=True, index=True)
